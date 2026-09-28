@@ -9,55 +9,51 @@ resource "azapi_resource" "ai_service" {
   location  = var.location
   name      = var.name
   parent_id = local.parent_id
-  type      = "Microsoft.CognitiveServices/accounts@2025-06-01"
+  type      = local.account_resource_type
   body = { for k, v in {
     kind = "AIServices"
     sku = {
       name = var.sku_name
     }
-    properties = merge(
-      {
-        amlWorkspace = var.aml_workspace != null ? {
-          resourceId       = var.aml_workspace.resource_id
-          identityClientId = var.aml_workspace.identity_client_id
-        } : null
-        networkInjections = var.network_injections != null ? [{
-          subnetArmId                = var.network_injections.subnet_id
-          scenario                   = var.network_injections.scenario
-          useMicrosoftManagedNetwork = var.network_injections.microsoft_managed_network_enabled
-        }] : null
-        raiMonitorConfig = var.rai_monitor_config != null ? {
-          adxStorageResourceId = var.rai_monitor_config.adx_storage_resource_id
-          identityClientId     = var.rai_monitor_config.identity_client_id
-        } : null
-      },
-      { for k, v in {
-        allowProjectManagement        = var.allow_project_management
-        allowedFqdnList               = try(length(var.fqdns) > 0 ? var.fqdns : null, null)
-        associatedProjects            = var.associated_projects
-        customSubDomainName           = var.custom_subdomain_name
-        defaultProject                = var.default_project
-        disableLocalAuth              = try(!var.local_auth_enabled, false)
-        dynamicThrottlingEnabled      = var.dynamic_throttling_enabled == false ? null : var.dynamic_throttling_enabled
-        publicNetworkAccess           = var.public_network_access_enabled ? "Enabled" : "Disabled"
-        restrictOutboundNetworkAccess = var.outbound_network_access_restricted == true
-        networkAcls = try({ for k, v in try({
-          defaultAction = var.network_acls.default_action
-          ipRules = try([for ip_rule in var.network_acls.ip_rules : {
-            value = ip_rule
-          }], null)
-          virtualNetworkRules = try([for rule in var.network_acls.virtual_network_rules : {
-            id                               = rule.subnet_id
-            ignoreMissingVnetServiceEndpoint = rule.ignore_missing_vnet_service_endpoint == true
-          }], null)
-          bypass = var.network_acls.bypass
-        }, null) : k => v if v != null }, null)
-        userOwnedStorage = try([for storage in var.storage : {
-          resourceId       = storage.storage_account_id
-          identityClientId = storage.identity_client_id
+    properties = { for k, v in {
+      allowProjectManagement = var.allow_project_management
+      allowedFqdnList        = try(length(var.fqdns) > 0 ? var.fqdns : null, null)
+      amlWorkspace = var.aml_workspace != null ? {
+        resourceId       = var.aml_workspace.resource_id
+        identityClientId = var.aml_workspace.identity_client_id
+      } : null
+      associatedProjects            = var.associated_projects
+      customSubDomainName           = var.custom_subdomain_name
+      defaultProject                = var.default_project
+      disableLocalAuth              = try(!var.local_auth_enabled, false)
+      dynamicThrottlingEnabled      = var.dynamic_throttling_enabled == false ? null : var.dynamic_throttling_enabled
+      publicNetworkAccess           = var.public_network_access_enabled ? "Enabled" : "Disabled"
+      restrictOutboundNetworkAccess = var.outbound_network_access_restricted == true
+      networkAcls = try({ for k, v in try({
+        defaultAction = var.network_acls.default_action
+        ipRules = try([for ip_rule in var.network_acls.ip_rules : {
+          value = ip_rule
         }], null)
-      } : k => v if v != null }
-    )
+        virtualNetworkRules = try([for rule in var.network_acls.virtual_network_rules : {
+          id                               = rule.subnet_id
+          ignoreMissingVnetServiceEndpoint = rule.ignore_missing_vnet_service_endpoint == true
+        }], null)
+        bypass = var.network_acls.bypass
+      }, null) : k => v if v != null }, null)
+      networkInjections = var.network_injections != null ? [{
+        subnetArmId                = var.network_injections.subnet_id
+        scenario                   = var.network_injections.scenario
+        useMicrosoftManagedNetwork = var.network_injections.microsoft_managed_network_enabled
+      }] : null
+      raiMonitorConfig = var.rai_monitor_config != null ? {
+        adxStorageResourceId = var.rai_monitor_config.adx_storage_resource_id
+        identityClientId     = var.rai_monitor_config.identity_client_id
+      } : null
+      userOwnedStorage = try([for storage in var.storage : {
+        resourceId       = storage.storage_account_id
+        identityClientId = storage.identity_client_id
+      }], null)
+    } : k => v if v != null }
   } : k => v if v != null }
   create_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
   delete_headers            = var.enable_telemetry ? { "User-Agent" : local.avm_azapi_header } : null
@@ -133,7 +129,7 @@ resource "azapi_update_resource" "ai_service_hsm_key" {
   count = var.kind == "AIServices" && var.is_hsm_key ? 1 : 0
 
   resource_id = azapi_resource.ai_service[0].id
-  type        = "Microsoft.CognitiveServices/accounts@2025-06-01"
+  type        = local.account_resource_type
   body = {
     properties = {
       apiProperties = null

@@ -56,8 +56,14 @@ variable "aml_workspace" {
 
 variable "associated_projects" {
   type        = list(string)
-  default     = []
-  description = "(Optional) Specifies the projects, by project name, that are associated with this resource."
+  default     = null
+  description = <<DESCRIPTION
+(Optional) Specifies the projects, by project name, that are associated with this resource. Only applies when `kind` is `AIServices`.
+
+When `null` (the default) the `associatedProjects` property is omitted from the request body, leaving the associations that ARM manages server-side untouched (ARM populates this list when Foundry projects are created under the account). This is the recommended setting when projects are managed outside this module.
+
+When set to a list (including `[]`), the list is sent as-is and becomes authoritative: any project not in the list is disassociated.
+DESCRIPTION
 }
 
 variable "cognitive_deployments" {
@@ -174,7 +180,11 @@ variable "customer_managed_key" {
 variable "default_project" {
   type        = string
   default     = null
-  description = "(Optional) Specifies the project, by project name, that is targeted when data plane endpoints are called without a project parameter."
+  description = <<DESCRIPTION
+(Optional) Specifies the project, by project name, that is targeted when data plane endpoints are called without a project parameter. Only applies when `kind` is `AIServices`.
+
+When `null` (the default) the `defaultProject` property is omitted from the request body, leaving the value that ARM manages server-side untouched (ARM sets it when Foundry projects are created under the account). This is the recommended setting when projects are managed outside this module.
+DESCRIPTION
 }
 
 variable "deployment_serialization_enabled" {
@@ -530,6 +540,20 @@ variable "rai_policies" {
  - `update` - (Optional) Used when updating the RAI policy.
 DESCRIPTION
   nullable    = false
+}
+
+variable "resource_api_version" {
+  type        = string
+  default     = "2025-06-01"
+  description = <<DESCRIPTION
+(Optional) The ARM API version used for the `Microsoft.CognitiveServices/accounts` resource type. Applies to the account resource (both `azapi_resource.this` and `azapi_resource.ai_service`), the HSM encryption update (`azapi_update_resource.ai_service_hsm_key`) and, by inheritance, the `listKeys` action. Child resource types (`accounts/deployments`, `accounts/raiPolicies`) keep their own pinned API versions in their submodules. Must be in the format `YYYY-MM-DD` or `YYYY-MM-DD-preview`. Defaults to `2025-06-01`.
+DESCRIPTION
+  nullable    = false
+
+  validation {
+    condition     = can(regex("^[0-9]{4}-[0-9]{2}-[0-9]{2}(-preview)?$", var.resource_api_version))
+    error_message = "resource_api_version must be in the format YYYY-MM-DD or YYYY-MM-DD-preview, e.g. `2025-06-01` or `2025-10-01-preview`."
+  }
 }
 
 variable "retry" {

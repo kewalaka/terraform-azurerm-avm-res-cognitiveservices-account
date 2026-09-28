@@ -22,6 +22,7 @@ moved {
 }
 
 locals {
+  account_resource_type  = "Microsoft.CognitiveServices/accounts@${var.resource_api_version}"
   parent_id              = var.parent_id
   resource_group_name    = split("/", var.parent_id)[4]
   sensitive_body_index   = local.sensitive_body_present ? 0 : 1
@@ -37,7 +38,7 @@ resource "azapi_resource" "this" {
   location  = var.location
   name      = var.name
   parent_id = local.parent_id
-  type      = "Microsoft.CognitiveServices/accounts@2025-06-01"
+  type      = local.account_resource_type
   body = { for k, v in {
     kind = var.kind
     sku = {
