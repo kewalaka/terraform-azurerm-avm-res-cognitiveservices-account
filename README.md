@@ -165,11 +165,15 @@ Default: `null`
 
 ### <a name="input_associated_projects"></a> [associated\_projects](#input\_associated\_projects)
 
-Description: (Optional) Specifies the projects, by project name, that are associated with this resource.
+Description: (Optional) Specifies the projects, by project name, that are associated with this resource. Only applies when `kind` is `AIServices`.
+
+When `null` (the default) the `associatedProjects` property is omitted from the request body, leaving the associations that ARM manages server-side untouched (ARM populates this list when Foundry projects are created under the account). This is the recommended setting when projects are managed outside this module.
+
+When set to a list (including `[]`), the list is sent as-is and becomes authoritative: any project not in the list is disassociated.
 
 Type: `list(string)`
 
-Default: `[]`
+Default: `null`
 
 ### <a name="input_cognitive_deployments"></a> [cognitive\_deployments](#input\_cognitive\_deployments)
 
@@ -296,7 +300,9 @@ Default: `null`
 
 ### <a name="input_default_project"></a> [default\_project](#input\_default\_project)
 
-Description: (Optional) Specifies the project, by project name, that is targeted when data plane endpoints are called without a project parameter.
+Description: (Optional) Specifies the project, by project name, that is targeted when data plane endpoints are called without a project parameter. Only applies when `kind` is `AIServices`.
+
+When `null` (the default) the `defaultProject` property is omitted from the request body, leaving the value that ARM manages server-side untouched (ARM sets it when Foundry projects are created under the account). This is the recommended setting when projects are managed outside this module.
 
 Type: `string`
 
@@ -677,6 +683,14 @@ map(object({
 ```
 
 Default: `{}`
+
+### <a name="input_resource_api_version"></a> [resource\_api\_version](#input\_resource\_api\_version)
+
+Description: (Optional) The ARM API version used for the `Microsoft.CognitiveServices/accounts` resource type. Applies to the account resource (both `azapi_resource.this` and `azapi_resource.ai_service`), the HSM encryption update (`azapi_update_resource.ai_service_hsm_key`) and, by inheritance, the `listKeys` action. Child resource types (`accounts/deployments`, `accounts/raiPolicies`) keep their own pinned API versions in their submodules. Must be in the format `YYYY-MM-DD` or `YYYY-MM-DD-preview`. Defaults to `2025-06-01`.
+
+Type: `string`
+
+Default: `"2025-06-01"`
 
 ### <a name="input_retry"></a> [retry](#input\_retry)
 
